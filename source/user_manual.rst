@@ -257,10 +257,6 @@ custom  MIME_ headers listed in the table below.
     X-Mailgun-Tag               Tag string used for aggregating stats. See :ref:`tagging`
                                 for more information. You can mark a message with several
                                 categories by setting multiple ``X-Mailgun-Tag`` headers.
-    X-Mailgun-Campaign-Id       Id of the campaign the message belongs to. See
-                                :ref:`um-campaign-analytics` for details.
-                                You can assign a message to several campaigns by setting
-                                multiple different ``X-Mailgun-Campaign-Id`` headers.
     X-Mailgun-Dkim              Enables/disables DKIM signatures on per-message basis.
                                 Use ``yes`` or ``no``.
     X-Mailgun-Deliver-By        Desired time of delivery. See `Scheduling Delivery`_ and
@@ -433,14 +429,6 @@ You can set the access level of Mailing Lists to:
 * Allow Mailing List members to post to the list; or
 * Allow anybody to post to the list.
 
-**Campaigns**
-
-Mailing lists are integrated with :ref:`um-campaign-analytics`. Each
-message sent to a lists with a Campaign ID will be tracked and
-reported. In this case, the mailing list will have detailed analytics for
-all recipients that can be retrieved via API or seen in the Campaign tab of
-the Control Panel.
-
 .. _template-variables:
 
 **Template Variables**
@@ -521,7 +509,7 @@ This is useful for testing purposes.
 Tracking Messages
 *****************
 
-Once you start sending and receiving messages, it's important to track what's happening with them. We try to make tracking your messages as easy as possible through Events, Stats and Campaigns.
+Once you start sending and receiving messages, it's important to track what's happening with them. We try to make tracking your messages as easy as possible through Events and Stats.
 
 In addition, Mailgun permanently stores when a message can not be delivered due to a hard bounce (permanent failure) or when a recipient unsubscribes or complains of spam. In these cases, Mailgun will not attempt to deliver to these recipients in the future, in order to protect your sending reputation.
 
@@ -531,7 +519,6 @@ Mailgun provides a variety of methods to access data on your emails:
 - Access data on Events programmatically through the :ref:`Events API <api-events>`.  Data is stored for at least 30 days for paid accounts and at least 2 days for free accounts.
 - View, search and edit tables for Bounces, Unsubscribes and Spam Complaints in `Suppression Lists <https://mailgun.com/app/suppressions>`_ or their respective APIs (:ref:`Bounces API <api-bounces>`, :ref:`Unsubscribes API <api-unsubscribes>`, :ref:`Complaints API <api-complaints>`). Data is stored indefinitely.
 - Access statistics aggregated by tags in the Tracking tab of the Control Panel or the :ref:`Stats API <api-stats>`. Data is stored for at least 6 months.
-- Create Campaigns and access detailed analytics on those Campaigns through the Control Panel or the :ref:`Campaigns API <api-campaigns>`. Data is stored for at least 6 months other than the delivered event which is stored for 2 weeks.
 - Receive notifications of events through a Webhook each time an Event happens and store the data on your side.
 
 **Enable Tracking**
@@ -1201,142 +1188,6 @@ Sample response:
         }
     ]
   }
-
-.. _um-campaign-analytics:
-
-Campaign Analytics
-===================
-
-Mailgun allows you to easily create Campaigns either using the API or the Campaigns Tab in the Control Panel.
-Campaigns are a tool to segment your email traffic for analysis. When you include messages in a Campaign, Mailgun tracks
-those messages and creates detailed analytics on those messages. Mailgun stores campaign data for 6 months for events other than delivered, which are stored for 2 weeks.
-
-Campaign Analytics allow you to do things like:
-
-- Track events down to the individual recipient.
-- Compare Campaigns for A/B testing.
-- Optimize segmentation of Mailing Lists and content by geo location and recipient domain (Gmail, Hotmail, etc.).
-- Optimize delivery times by seeing engagement levels (opens & clicks) throughout the day.
-
-**Creating a Campaign**
-
-You can create Campaigns using the Campaign Tab in the Control Panel or the API.
-
-Each Campaign has ``name`` and ``id``. You use the ``id``  when
-referring to the campaign via the API. You can supply your own ``id`` when
-creating campaign, otherwise Mailgun will generate one for you.
-
-Creating a campaign with supplied ``id``:
-
-.. include:: samples/create-campaign.rst
-
-.. note:: Supplied ``id`` must be pure ASCII and unique across all campaigns for
-          a particular domain. Campaign name and campaign ID should not exceed the
-          maximum length of 64 characters.
-
-**Sending a Campaign**
-
-Including a message in a campaign can be done by setting ``o:campaign`` option with your campaign's
-``id`` value:
-
-.. include:: samples/send-campaign-message.rst
-
-Alternatively, if you're building MIME yourself, include ``X-Mailgun-Campaign-Id``
-header to send a campaign message.
-
-.. note:: A single message may belong to up to 3 campaigns at the same time - just use
-          multiple ``o:campaign`` values or ``X-Mailgun-Campaign-Id`` headers.
-
-**Accessing Analytics**
-
-Once a message has been sent using a Campaign ID, Mailgun tracks the message and provides detailed analytics. Mailgun stores campaign data for at least six months. Mailgun provides you with several reports that you can find in the Control Panel, including:
-
-- Comparison of events across campaigns for A/B testing (including opens, clicks, bounces, unsubscribes and complaints).
-- Performance of link clicks in a campaign.
-- Comparison of events across Domains (Gmail, Yahoo, etc.).
-- Timeline of events occurring throughout the day to measure optimal delivery time (which can be used in conjunction with `Scheduling Delivery`_).
-- Geographic performance of opens and clicks.
-
-You can also create your own reports by accessing the data via the API.
-
-You may want to see how're recipients performing for your campaign during daily hours:
-
-.. include:: samples/get-campaign-stats-by-daily-hour.rst
-
-Sample response:
-
-.. code-block:: javascript
-
-  [
-    {
-        "daily_hour": 8,
-        "total": {
-            "complained": 0,
-            "clicked": 6,
-            "opened": 7,
-            "unsubscribed": 5,
-            "bounced": 0
-        },
-        "unique": {
-            "clicked": {
-                "recipient": 3,
-                "link": 3
-            },
-            "opened": {
-                "recipient": 3
-            }
-        }
-    },
-    {
-        "daily_hour": 13,
-        "total": {
-            "complained": 0,
-            "clicked": 0,
-            "opened": 0,
-            "unsubscribed": 0,
-            "bounced": 0
-        },
-        "unique": {
-            "clicked": {
-                "recipient": 0,
-                "link": 0
-            },
-            "opened": {
-                "recipient": 0
-            }
-        }
-    }
-  ]
-
-Or retrieve the entire history for a particular recipient:
-
-.. include:: samples/get-campaign-recipient-history.rst
-
-Sample response:
-
-.. code-block:: javascript
-
-  [
-    {
-        "domain": "mailgunhq.com",
-        "tags": [],
-        "timestamp": "Wed, 08 Feb 2012 13:44:02 GMT",
-        "recipient": "baz@example.com",
-        "event": "delivered",
-        "user_vars": {}
-    },
-    {
-        "domain": "mailgunhq.com",
-        "tags": [],
-        "timestamp": "Wed, 08 Feb 2012 13:38:35 GMT",
-        "recipient": "baz@example.com",
-        "event": "delivered",
-        "user_vars": {}
-    }
-  ]
-
-See our :ref:`Campaigns API <api-campaigns>` reference for the full list of
-available methods.
 
 
 Receiving, Forwarding and Storing Messages

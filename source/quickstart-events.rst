@@ -112,7 +112,6 @@ In addition to sending, receiving and storing mail, Mailgun can also help
 developers with the following:
 
 - Automatic "Unsubscribe me" functionality.
-- Support for email campaigns and tracking their performance.
 - Bounce handling.
 - Spam complaints handling.
 - Spam filtering for incoming messages.
